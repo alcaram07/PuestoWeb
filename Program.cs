@@ -51,15 +51,23 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
     
-    // Ejecutar migraciones pendientes automáticamente
-    if (!app.Environment.IsDevelopment())
+    try 
     {
-        await context.Database.MigrateAsync();
+        // Ejecutar migraciones pendientes automáticamente
+        if (!app.Environment.IsDevelopment())
+        {
+            await context.Database.MigrateAsync();
+        }
+        
+        var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        await DbInitializer.Initialize(context, userManager, roleManager);
     }
-    
-    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    await DbInitializer.Initialize(context, userManager, roleManager);
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Ocurrió un error al migrar o inicializar la base de datos.");
+    }
 }
 
 // Configure the HTTP request pipeline.
