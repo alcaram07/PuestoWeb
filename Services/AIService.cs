@@ -6,12 +6,10 @@ namespace PuestoWeb.Services;
 
 public class AIService
 {
-    private readonly string _apiKey;
     private readonly ILogger<AIService> _logger;
 
     public AIService(IConfiguration configuration, ILogger<AIService> logger)
     {
-        _apiKey = configuration["Groq:ApiKey"] ?? "";
         _logger = logger;
     }
 
@@ -31,8 +29,6 @@ public class AIService
 
     public async Task<List<InterpretedItem>> InterpretOrderAsync(string text)
     {
-        // Forzamos el uso de reglas para evitar problemas de compilación con librerías externas sin usar
-        // En un escenario real con API Key, aquí se reintegraría la llamada a Groq o OpenAI
         return await Task.Run(() => InterpretWithRules(text));
     }
 
@@ -74,7 +70,6 @@ public class AIService
 
         if (items.Count == 0 && words.Length > 0)
         {
-            // Si no hay estructura clara, tomamos la primera palabra como producto probable
             items.Add(new InterpretedItem { ArticuloSugerido = words[0], Cantidad = 1 });
         }
 

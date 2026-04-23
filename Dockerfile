@@ -1,20 +1,16 @@
-# Etapa de compilación
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-WORKDIR /src
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
+WORKDIR /app
 
-# Copiar todo y restaurar
-COPY . .
-RUN dotnet restore
+# Copiar todo y publicar
+COPY . ./
+RUN dotnet publish -c Release -o out
 
-# Publicar la aplicación
-RUN dotnet publish "PuestoWeb.csproj" -c Release -o /app/publish /p:UseAppHost=false
-
-# Etapa final
+# Imagen de ejecución
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
-COPY --from=build /app/publish .
+COPY --from=build-env /app/out .
 
-# Render usa la variable PORT, así que configuramos .NET para que la escuche
+# Configurar puerto para Render
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
