@@ -1,5 +1,5 @@
 # Etapa de compilación
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 WORKDIR /src
 
 # Copiar archivos del proyecto y restaurar dependencias
@@ -15,11 +15,11 @@ FROM build AS publish
 RUN dotnet publish "PuestoWeb.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Etapa final (Imagen de ejecución)
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Exponer el puerto que usa Render (habitualmente el 8080 o el puerto definido por la variable PORT)
+# Exponer el puerto
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
