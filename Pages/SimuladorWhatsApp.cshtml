@@ -1,0 +1,89 @@
+@page
+@model PuestoWeb.Pages.SimuladorWhatsAppModel
+@{
+    ViewData["Title"] = "Simulador de Pedidos WhatsApp";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-success">
+                <div class="card-header bg-success text-white d-flex align-items-center">
+                    <i class="bi bi-whatsapp fs-3 me-2"></i>
+                    <h1 class="h4 mb-0">Simulador de Pedidos Inteligentes</h1>
+                </div>
+                <div class="card-body bg-light">
+                    <p class="text-muted">Esta página simula la llegada de un pedido vía Webhook de WhatsApp. La IA procesará el contenido automáticamente.</p>
+                    
+                    <form method="post">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Número de Teléfono</label>
+                            <input asp-for="Telefono" class="form-control" placeholder="+54 9 11 ..." />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Tipo de Mensaje</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="Tipo" id="typeText" value="text" checked asp-for="Tipo">
+                                <label class="btn btn-outline-success" for="typeText"><i class="bi bi-chat-left-text me-1"></i> Texto</label>
+
+                                <input type="radio" class="btn-check" name="Tipo" id="typeAudio" value="audio" asp-for="Tipo">
+                                <label class="btn btn-outline-success" for="typeAudio"><i class="bi bi-mic me-1"></i> Audio</label>
+
+                                <input type="radio" class="btn-check" name="Tipo" id="typeImage" value="image" asp-for="Tipo">
+                                <label class="btn btn-outline-success" for="typeImage"><i class="bi bi-camera me-1"></i> Imagen</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Contenido del Mensaje</label>
+                            <textarea asp-for="Contenido" class="form-control" rows="3" placeholder="Ej: Hola, quiero 2 kilos de papas y una banana."></textarea>
+                            <small class="text-muted">Si eliges Imagen/Audio, ingresa una URL o deja vacío para simular.</small>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg shadow">
+                                <i class="bi bi-send-fill me-2"></i>Enviar Pedido a la IA
+                            </button>
+                        </div>
+                    </form>
+
+                    @if (Model.PedidoProcesado != null)
+                    {
+                        <div class="mt-5 animate-fade-in">
+                            <div class="alert alert-success border-2 shadow-sm">
+                                <h3 class="h5"><i class="bi bi-robot me-2"></i>¡IA Procesó el Pedido!</h3>
+                                <hr>
+                                <p><strong>Pedido ID:</strong> #@Model.PedidoProcesado.Id</p>
+                                <p><strong>Total Estimado:</strong> $@Model.PedidoProcesado.Total.ToString("N2")</p>
+                                <p><strong>Estado:</strong> <span class="badge bg-primary">@Model.PedidoProcesado.Estado</span></p>
+                                <div class="mt-3">
+                                    <h6>Artículos Detectados:</h6>
+                                    <ul class="list-group list-group-flush">
+                                        @foreach (var linia in Model.PedidoProcesado.Linias)
+                                        {
+                                            <li class="list-group-item bg-transparent">
+                                                @linia.Cantidad x @linia.Articulo.Nombre ($@linia.PrecioUnitario)
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                                <a asp-page="/Admin/Pedidos/Details" asp-route-id="@Model.PedidoProcesado.Id" class="btn btn-sm btn-success mt-3">Ver en Panel Admin</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>

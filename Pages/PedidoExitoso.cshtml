@@ -1,0 +1,35 @@
+@page "{id:int}"
+@model PuestoWeb.Pages.PedidoExitosoModel
+@{
+    ViewData["Title"] = "¡Pedido Confirmado!";
+}
+
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="display-1 text-success mb-4">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <h1 class="fw-bold">¡Muchas gracias por tu compra!</h1>
+            <p class="lead text-muted mb-4">Hemos recibido tu pedido #@RouteData.Values["id"] con éxito.</p>
+            
+            <div class="card shadow-sm mb-5">
+                <div class="card-body">
+                    <p class="mb-2">¿Qué sigue ahora?</p>
+                    <ul class="text-start mb-0">
+                        <li>Te contactaremos por WhatsApp para confirmar el horario de entrega.</li>
+                        <li>Preparamos tu pedido con las frutas y verduras más frescas del día.</li>
+                        <li>El pago lo realizas al recibir tu pedido.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                <a asp-page="/Index" class="btn btn-outline-success btn-lg px-4">Volver al Inicio</a>
+                <a href="https://wa.me/YOUR_PHONE_NUMBER" class="btn btn-success btn-lg px-4">
+                    <i class="bi bi-whatsapp me-2"></i>Consultar por WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

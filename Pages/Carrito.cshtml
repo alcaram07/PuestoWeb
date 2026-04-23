@@ -1,0 +1,103 @@
+@page
+@model PuestoWeb.Pages.CarritoModel
+@{
+    ViewData["Title"] = "Mi Carrito";
+}
+
+<div class="container py-4">
+    <h1 class="mb-4"><i class="bi bi-cart3 me-2 text-success"></i>Tu Pedido</h1>
+
+    @if (Model.CartItems.Count == 0)
+    {
+        <div class="text-center py-5 shadow-sm rounded bg-light border">
+            <i class="bi bi-cart-x display-1 text-muted"></i>
+            <h2 class="mt-3">Tu carrito está vacío</h2>
+            <p class="text-muted">Parece que aún no has seleccionado ninguna delicia del campo.</p>
+            <a asp-page="/Catalogo" class="btn btn-success btn-lg mt-3">Ver Productos</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">Producto</th>
+                                        <th>Precio</th>
+                                        <th>Cantidad</th>
+                                        <th>Subtotal</th>
+                                        <th class="text-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.CartItems)
+                                    {
+                                        <tr>
+                                            <td class="ps-3">
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(item.ImagenUrl))
+                                                    {
+                                                        <img src="@item.ImagenUrl" alt="@item.Nombre" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                                    }
+                                                    <span class="fw-bold">@item.Nombre</span>
+                                                </div>
+                                            </td>
+                                            <td>$@item.Precio.ToString("N2")</td>
+                                            <td style="width: 150px;">
+                                                <div class="input-group input-group-sm">
+                                                    <form method="post" asp-page-handler="UpdateQuantity" asp-route-id="@item.ArticuloId" asp-route-delta="-0.5">
+                                                        <button class="btn btn-outline-secondary" type="submit">-</button>
+                                                    </form>
+                                                    <input type="text" class="form-control text-center" value="@item.Cantidad" readonly>
+                                                    <form method="post" asp-page-handler="UpdateQuantity" asp-route-id="@item.ArticuloId" asp-route-delta="0.5">
+                                                        <button class="btn btn-outline-secondary" type="submit">+</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                            <td class="fw-bold">$@item.Subtotal.ToString("N2")</td>
+                                            <td class="text-center pe-3">
+                                                <form method="post" asp-page-handler="Remove" asp-route-id="@item.ArticuloId">
+                                                    <button type="submit" class="btn btn-sm btn-link text-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <a asp-page="/Catalogo" class="btn btn-link text-success ps-0">
+                    <i class="bi bi-arrow-left me-2"></i>Seguir Comprando
+                </a>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-success">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Resumen de Compra</h5>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Subtotal</span>
+                            <span>$@Model.Total.ToString("N2")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3 fw-bold border-top pt-3 h4">
+                            <span>Total</span>
+                            <span class="text-success">$@Model.Total.ToString("N2")</span>
+                        </div>
+                        <div class="d-grid gap-2 mt-4">
+                            <a asp-page="/Checkout" class="btn btn-success btn-lg py-3 fw-bold shadow-sm">
+                                Confirmar Pedido <i class="bi bi-chevron-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

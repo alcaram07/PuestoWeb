@@ -1,0 +1,37 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Puesto de Frutas y Verduras";
+}
+
+<div class="row align-items-center py-5">
+    <div class="col-lg-6">
+        <h1 class="display-3 fw-bold mb-4">Del campo a tu hogar, con un <span class="text-success">click.</span></h1>
+        <p class="lead mb-4">Seleccionamos lo mejor de la cosecha diaria para asegurarte frescura y sabor inigualable. Haz tu pedido por la web o envíanos un audio por WhatsApp.</p>
+        <div class="d-grid gap-3 d-md-flex justify-content-md-start">
+            <a asp-page="/Catalogo" class="btn btn-success btn-lg px-4 me-md-2">Ver Catálogo</a>
+            <a href="#" class="btn btn-outline-success btn-lg px-4"><i class="bi bi-whatsapp me-2"></i>Pedido por WhatsApp</a>
+        </div>
+    </div>
+    <div class="col-lg-6 d-none d-lg-block">
+        <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format" alt="Mercado de frutas" class="img-fluid rounded shadow-lg">
+    </div>
+</div>
+
+<div class="row py-5 bg-light rounded-4 my-5">
+    <div class="col-md-4 text-center px-4">
+        <div class="h1 text-success mb-3"><i class="bi bi-truck"></i></div>
+        <h3>Envío Rápido</h3>
+        <p class="text-muted">Reparto diario en toda la zona. Tus frutas llegan frescas como recién cortadas.</p>
+    </div>
+    <div class="col-md-4 text-center px-4 border-start border-end">
+        <div class="h1 text-success mb-3"><i class="bi bi-patch-check"></i></div>
+        <h3>Calidad Premium</h3>
+        <p class="text-muted">Solo productos seleccionados. Si no te gusta la calidad, te devolvemos el dinero.</p>
+    </div>
+    <div class="col-md-4 text-center px-4">
+        <div class="h1 text-success mb-3"><i class="bi bi-chat-dots"></i></div>
+        <h3>Pedido por Voz</h3>
+        <p class="text-muted">¿No tienes tiempo? Envíanos un audio o una foto de tu lista por WhatsApp.</p>
+    </div>
+</div>

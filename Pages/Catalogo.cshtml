@@ -1,0 +1,65 @@
+@page
+@model PuestoWeb.Pages.CatalogoModel
+@{
+    ViewData["Title"] = "Catálogo de Productos";
+}
+
+<div class="text-center mb-5">
+    <h1 class="display-4 fw-bold">Nuestra Cosecha</h1>
+    <p class="lead text-muted">Frescura del campo directo a tu mesa</p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12 text-center">
+        <div class="btn-group" role="group">
+            <a asp-page="./Catalogo" asp-route-tipo="" class="btn @(string.IsNullOrEmpty(Model.TipoFiltro) ? "btn-success" : "btn-outline-success")">Todos</a>
+            <a asp-page="./Catalogo" asp-route-tipo="Fruta" class="btn @(Model.TipoFiltro == "Fruta" ? "btn-success" : "btn-outline-success")">Frutas</a>
+            <a asp-page="./Catalogo" asp-route-tipo="Verdura" class="btn @(Model.TipoFiltro == "Verdura" ? "btn-success" : "btn-outline-success")">Verduras</a>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    @foreach (var item in Model.Articulos)
+    {
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0 transition-hover">
+                <div class="position-relative">
+                    @if (!string.IsNullOrEmpty(item.ImagenUrl))
+                    {
+                        <img src="@item.ImagenUrl" class="card-img-top" alt="@item.Nombre" style="height: 200px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="bi bi-image text-muted display-4"></i>
+                        </div>
+                    }
+                    <span class="position-absolute top-0 end-0 m-2 badge @(item.Tipo == Models.TipoArticulo.Fruta ? "bg-warning text-dark" : "bg-success")">
+                        @item.Tipo
+                    </span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">@item.Nombre</h5>
+                    <p class="card-text text-muted small">@item.Descripcion</p>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <span class="h5 mb-0 text-success fw-bold">$@item.Precio.ToString("N2")</span>
+                        <form method="post" asp-page-handler="AddToCart" asp-route-id="@item.Id">
+                            <button type="submit" class="btn btn-outline-success btn-sm rounded-pill">
+                                <i class="bi bi-cart-plus me-1"></i>Añadir
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .transition-hover:hover {
+        transform: translateY(-5px);
+        transition: transform 0.3s ease;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>

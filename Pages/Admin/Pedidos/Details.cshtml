@@ -1,0 +1,96 @@
+@page "{id:int}"
+@model PuestoWeb.Pages.Admin.Pedidos.DetailsModel
+@{
+    ViewData["Title"] = "Detalle del Pedido";
+}
+
+<div class="mb-4">
+    <a asp-page="./Index" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Volver a la lista
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h2 class="h5 mb-0">Detalle del Pedido #@Model.Pedido.Id</h2>
+            </div>
+            <div class="card-body p-0">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Artículo</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unit.</th>
+                            <th class="text-end pe-3">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var linia in Model.Pedido.Linias)
+                        {
+                            <tr>
+                                <td class="ps-3">@linia.Articulo.Nombre</td>
+                                <td>@linia.Cantidad</td>
+                                <td>$@linia.PrecioUnitario.ToString("N2")</td>
+                                <td class="text-end pe-3 fw-bold">$@linia.Subtotal.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold">TOTAL:</td>
+                            <td class="text-end pe-3 fw-bold text-success h5">$@Model.Pedido.Total.ToString("N2")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h3 class="h6 mb-0">Información del Cliente</h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Nombre:</strong> @Model.Pedido.Cliente.Nombre @Model.Pedido.Cliente.Apellido</p>
+                <p class="mb-1"><strong>Teléfono:</strong> @Model.Pedido.Cliente.Telefono</p>
+                <p class="mb-1"><strong>Dirección:</strong> @Model.Pedido.Cliente.Direccion</p>
+                <hr>
+                <p class="mb-1"><strong>Fecha:</strong> @Model.Pedido.FechaPedido.ToString("f")</p>
+                <p class="mb-1">
+                    <strong>Origen:</strong> 
+                    @if (Model.Pedido.EsWhatsApp)
+                    {
+                        <span class="text-success"><i class="bi bi-whatsapp me-1"></i>WhatsApp</span>
+                    }
+                    else
+                    {
+                        <span class="text-primary"><i class="bi bi-globe me-1"></i>Web</span>
+                    }
+                </p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="h6 mb-3">Acciones de Pedido</h3>
+                <form method="post">
+                    <div class="mb-3">
+                        <select name="nuevoEstado" class="form-select" asp-items="Html.GetEnumSelectList<Models.EstadoPedido>()" asp-for="Pedido.Estado">
+                        </select>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Actualizar Estado</button>
+                    </div>
+                </form>
+                <div class="d-grid mt-2">
+                    <a href="https://wa.me/@Model.Pedido.Cliente.Telefono.Replace("+", "").Replace(" ", "")" target="_blank" class="btn btn-outline-success">
+                        <i class="bi bi-whatsapp me-2"></i>Contactar por WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

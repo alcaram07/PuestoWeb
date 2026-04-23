@@ -1,0 +1,60 @@
+@page
+@model PuestoWeb.Pages.Admin.Articulos.CreateModel
+@{
+    ViewData["Title"] = "Nuevo Artículo";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h2 class="h5 mb-0">Nuevo Artículo</h2>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Articulo.Nombre" class="form-label">Nombre</label>
+                        <input asp-for="Articulo.Nombre" class="form-control" placeholder="Ej: Manzana Roja" />
+                        <span asp-validation-for="Articulo.Nombre" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Articulo.Descripcion" class="form-label">Descripción</label>
+                        <textarea asp-for="Articulo.Descripcion" class="form-control" rows="3" placeholder="Detalles del producto..."></textarea>
+                        <span asp-validation-for="Articulo.Descripcion" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Articulo.Tipo" class="form-label">Tipo</label>
+                            <select asp-for="Articulo.Tipo" class="form-select" asp-items="Html.GetEnumSelectList<Models.TipoArticulo>()"></select>
+                            <span asp-validation-for="Articulo.Tipo" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Articulo.Precio" class="form-label">Precio ($)</label>
+                            <input asp-for="Articulo.Precio" class="form-control" type="number" step="0.01" />
+                            <span asp-validation-for="Articulo.Precio" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Articulo.ImagenUrl" class="form-label">URL de la Imagen</label>
+                        <input asp-for="Articulo.ImagenUrl" class="form-control" placeholder="https://..." />
+                        <span asp-validation-for="Articulo.ImagenUrl" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-page="Index" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success">Guardar Artículo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
