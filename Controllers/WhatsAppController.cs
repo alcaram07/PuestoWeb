@@ -22,6 +22,13 @@ public class WhatsAppController : ControllerBase
         _logger = logger;
     }
 
+    // Ruta de prueba: https://tu-url.com/api/whatsapp/test
+    [HttpGet("test")]
+    public IActionResult Test()
+    {
+        return Ok("El webhook está vivo y accesible.");
+    }
+
     [HttpGet]
     public IActionResult Verify()
     {
