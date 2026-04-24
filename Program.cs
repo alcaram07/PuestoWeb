@@ -89,7 +89,18 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Asegurar que las APIs no redirijan al login
+app.Use(async (context, next) =>
+{
+    await next();
+    if (context.Response.StatusCode == 401 && context.Request.Path.StartsWithSegments("/api"))
+    {
+        context.Response.ContentType = "text/plain";
+        await context.Response.WriteAsync("Acceso denegado a la API. Falta [AllowAnonymous] o configuración.");
+    }
+});
+
 app.MapRazorPages();
-app.MapControllers(); // Mapear rutas de API (como /api/whatsapp)
+app.MapControllers();
 
 app.Run();
