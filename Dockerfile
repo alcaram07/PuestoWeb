@@ -1,31 +1,28 @@
-# Etapa de compilación y publicación
+# Build Stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY . .
 RUN dotnet restore
-# Publicamos como "Self-Contained" para evitar dependencias externas en el servidor
-RUN dotnet publish "PuestoWeb.csproj" -c Release -o /app/publish \
-    --runtime linux-x64 \
-    --self-contained true \
-    /p:PublishTrimmed=false \
-    /p:PublishReadyToRun=false
+RUN dotnet publish "PuestoWeb.csproj" -c Release -o /app/publish
 
-# Etapa final (Ubuntu robusto para evitar errores de segmentación)
+# Runtime Stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# CONFIGURACIONES CRÍTICAS PARA ERROR 139:
-# 1. Desactivar optimizaciones JIT que fallan en servidores pequeños
+# SOLUCIONES CRÍTICAS PARA ERROR 139 EN RENDER:
+# 1. Desactivar intrínsecas de hardware (EVITA EL SEGFAULT 139)
+ENV DOTNET_EnableHWIntrinsic=0
+# 2. Desactivar compilación escalonada
 ENV DOTNET_TieredCompilation=0
-# 2. Modo invariante de globalización
+# 3. Modo invariante de globalización (ahorra memoria y evita fallos de ICU)
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
-# 3. Desactivar diagnósticos innecesarios
-ENV COMPlus_EnableDiagnostics=0
+# 4. Usar GC de estación de trabajo (usa menos RAM que el de servidor)
+ENV DOTNET_gcServer=0
 
 ENV ASPNETCORE_URLS=http://+:8080
 ENV PORT=8080
 
 EXPOSE 8080
 
-ENTRYPOINT ["./PuestoWeb"]
+ENTRYPOINT ["dotnet", "PuestoWeb.dll"]
