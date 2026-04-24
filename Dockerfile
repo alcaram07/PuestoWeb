@@ -1,28 +1,31 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
-WORKDIR /app
-
-# Desactivar telemetría y optimizar para Docker
-ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
-
-# Copiar csproj y restaurar
-COPY *.csproj ./
+# Etapa de compilación y publicación
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+COPY . .
 RUN dotnet restore
+# Publicamos como "Self-Contained" para evitar dependencias externas en el servidor
+RUN dotnet publish "PuestoWeb.csproj" -c Release -o /app/publish \
+    --runtime linux-x64 \
+    --self-contained true \
+    /p:PublishTrimmed=false \
+    /p:PublishReadyToRun=false
 
-# Copiar todo y publicar con optimización moderada
-COPY . ./
-RUN dotnet publish -c Release -o out --no-restore
-
-# Imagen de ejecución (Debian robusta)
+# Etapa final (Ubuntu robusto para evitar errores de segmentación)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
-COPY --from=build-env /app/out .
+COPY --from=build /app/publish .
 
-# SOLUCIÓN AL ERROR 139: Modo invariante de globalización
-# Esto evita que .NET dependa de librerías ICU externas que fallan en algunos servidores
+# CONFIGURACIONES CRÍTICAS PARA ERROR 139:
+# 1. Desactivar optimizaciones JIT que fallan en servidores pequeños
+ENV DOTNET_TieredCompilation=0
+# 2. Modo invariante de globalización
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+# 3. Desactivar diagnósticos innecesarios
+ENV COMPlus_EnableDiagnostics=0
+
 ENV ASPNETCORE_URLS=http://+:8080
 ENV PORT=8080
 
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "PuestoWeb.dll"]
+ENTRYPOINT ["./PuestoWeb"]
