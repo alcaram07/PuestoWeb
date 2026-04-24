@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using PuestoWeb.Services;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization; // Añadir esto
 
 namespace PuestoWeb.Controllers;
 
 [ApiController]
 [Route("api/whatsapp")]
+[AllowAnonymous] // Permitir acceso público para que Meta pueda enviar mensajes
 public class WhatsAppController : ControllerBase
 {
     private readonly AIService _aiService;
