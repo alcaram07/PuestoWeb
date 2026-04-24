@@ -45,13 +45,10 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// LOG DE CONSOLA ABSOLUTO: Para ver si Meta toca el servidor
+// LOG DEFINITIVO: Ver CUALQUIER golpe al servidor
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/api"))
-    {
-        Console.WriteLine($">>> SOLICITUD DETECTADA: {context.Request.Method} {context.Request.Path} <<<");
-    }
+    Console.WriteLine($"[LOG-RED] {context.Request.Method} {context.Request.Path}");
     await next();
 });
 
