@@ -5,7 +5,7 @@ using PuestoWeb.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "DataSource=app.db";
 
 // Soporte para SQLite en deploy si no hay Postgres configurado
 var postgresConnectionString = Environment.GetEnvironmentVariable("DATABASE_URL"); // Común en servicios de hosting

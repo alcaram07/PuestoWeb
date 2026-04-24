@@ -52,5 +52,5 @@ _ReSharper*/
 *.db-wal
 
 # OpenAI/Groq Keys (por seguridad)
-appsettings.json
+# appsettings.json  <-- Comentado para permitir subida
 appsettings.Development.json
