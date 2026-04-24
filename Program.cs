@@ -45,14 +45,11 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// LOG DE EMERGENCIA: Ver cada solicitud que entra al servidor
+// LOG DE EMERGENCIA TOTAL: Ver CUALQUIER solicitud
 app.Use(async (context, next) =>
 {
     var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-    if (context.Request.Path.StartsWithSegments("/api"))
-    {
-        logger.LogInformation("--- SOLICITUD API: {Method} {Path} ---", context.Request.Method, context.Request.Path);
-    }
+    logger.LogInformation(">>> ENTRADA: {Method} {Path} <<<", context.Request.Method, context.Request.Path);
     await next();
 });
 
