@@ -45,11 +45,13 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// LOG DE EMERGENCIA TOTAL: Ver CUALQUIER solicitud
+// LOG DE CONSOLA ABSOLUTO: Para ver si Meta toca el servidor
 app.Use(async (context, next) =>
 {
-    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-    logger.LogInformation(">>> ENTRADA: {Method} {Path} <<<", context.Request.Method, context.Request.Path);
+    if (context.Request.Path.StartsWithSegments("/api"))
+    {
+        Console.WriteLine($">>> SOLICITUD DETECTADA: {context.Request.Method} {context.Request.Path} <<<");
+    }
     await next();
 });
 
