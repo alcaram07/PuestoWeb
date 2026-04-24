@@ -11,7 +11,7 @@ public class WhatsAppController : ControllerBase
     private readonly AIService _aiService;
     private readonly OrderProcessorService _orderProcessor;
     private readonly ILogger<WhatsAppController> _logger;
-    private const string VERIFY_TOKEN = "puesto_token_2024"; // Este es el token que pondrás en Meta
+    private const string VERIFY_TOKEN = "puesto_token_2024";
 
     public WhatsAppController(AIService aiService, OrderProcessorService orderProcessor, ILogger<WhatsAppController> logger)
     {
@@ -20,7 +20,6 @@ public class WhatsAppController : ControllerBase
         _logger = logger;
     }
 
-    // Verificación del Webhook (requerido por Meta al configurar)
     [HttpGet]
     public IActionResult Verify()
     {
@@ -30,62 +29,66 @@ public class WhatsAppController : ControllerBase
 
         if (hubMode == "subscribe" && hubToken == VERIFY_TOKEN)
         {
-            _logger.LogInformation("Webhook de WhatsApp verificado con éxito.");
             return Ok(hubChallenge);
         }
 
         return Forbid();
     }
 
-    // Recepción de mensajes
     [HttpPost]
     public async Task<IActionResult> Receive()
     {
-        using var reader = new StreamReader(Request.Body);
-        var body = await reader.ReadToEndAsync();
-        _logger.LogInformation("Mensaje de WhatsApp recibido: {Body}", body);
-
         try
         {
-            // Nota: Aquí se debería deserializar el JSON de Meta (WhatsApp Business API)
-            // Para esta implementación, asumimos una estructura simplificada que puedes adaptar
+            using var reader = new StreamReader(Request.Body);
+            var body = await reader.ReadToEndAsync();
+            _logger.LogInformation("Webhook recibido: {Body}", body);
+
             using var jsonDoc = JsonDocument.Parse(body);
             var root = jsonDoc.RootElement;
-            
-            // Lógica para extraer el texto o el ID del audio del JSON de Meta
-            // Esto varía según si usas Twilio o la API Directa de Meta.
-            
-            string clienteTelefono = "Desconocido";
-            string contenidoMensaje = "";
-            bool esAudio = false;
 
-            // Intento básico de extraer datos (esto es un esquema general)
-            if (body.Contains("text")) 
+            // Navegar por el JSON de Meta para encontrar el mensaje
+            if (root.TryGetProperty("entry", out var entryArray) && entryArray.GetArrayLength() > 0)
             {
-                // Es un mensaje de texto
-                contenidoMensaje = "Extracción de texto del JSON de Meta"; 
-            }
-            else if (body.Contains("audio"))
-            {
-                esAudio = true;
-                // En el caso de audio, Meta envía un ID. 
-                // Deberíamos descargar el archivo y pasarlo al AIService.
-                contenidoMensaje = await _aiService.TranscribeAudioAsync(Stream.Null, "whatsapp_audio.ogg");
-            }
+                var entry = entryArray[0];
+                if (entry.TryGetProperty("changes", out var changesArray) && changesArray.GetArrayLength() > 0)
+                {
+                    var change = changesArray[0];
+                    var value = change.GetProperty("value");
 
-            if (!string.IsNullOrEmpty(contenidoMensaje))
-            {
-                var items = await _aiService.InterpretOrderAsync(contenidoMensaje);
-                // Aquí podrías enviar una respuesta automática al cliente confirmando el pedido
-                _logger.LogInformation("Pedido interpretado vía WhatsApp: {Count} artículos", items.Count);
+                    if (value.TryGetProperty("messages", out var messagesArray) && messagesArray.GetArrayLength() > 0)
+                    {
+                        var message = messagesArray[0];
+                        string from = message.GetProperty("from").GetString() ?? "Desconocido";
+                        string type = message.GetProperty("type").GetString() ?? "text";
+                        string text = "";
+
+                        if (type == "text")
+                        {
+                            text = message.GetProperty("text").GetProperty("body").GetString() ?? "";
+                        }
+                        else if (type == "audio")
+                        {
+                            // En una versión final, aquí descargaríamos el audio usando el media ID
+                            // Por ahora, usamos la simulación que configuramos en AIService
+                            text = "Audio de WhatsApp"; 
+                        }
+
+                        if (!string.IsNullOrEmpty(text))
+                        {
+                            _logger.LogInformation("Procesando pedido de {From}: {Text}", from, text);
+                            await _orderProcessor.ProcessWhatsAppOrderAsync(from, text, type);
+                        }
+                    }
+                }
             }
 
             return Ok();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error procesando Webhook de WhatsApp");
-            return BadRequest();
+            _logger.LogError(ex, "Error procesando mensaje de WhatsApp");
+            return Ok(); // Siempre devolvemos Ok a Meta para evitar que reintente infinitamente
         }
     }
 }
