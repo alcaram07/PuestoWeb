@@ -1,13 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 using PuestoWeb.Services;
 using System.Text.Json;
-using Microsoft.AspNetCore.Authorization; // Añadir esto
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Antiforgery;
 
 namespace PuestoWeb.Controllers;
 
 [ApiController]
 [Route("api/whatsapp")]
-[AllowAnonymous] // Permitir acceso público para que Meta pueda enviar mensajes
+[AllowAnonymous]
+[IgnoreAntiforgeryToken]
 public class WhatsAppController : ControllerBase
 {
     private readonly AIService _aiService;
@@ -22,7 +24,6 @@ public class WhatsAppController : ControllerBase
         _logger = logger;
     }
 
-    // Ruta de prueba: https://tu-url.com/api/whatsapp/test
     [HttpGet("test")]
     public IActionResult Test()
     {
@@ -47,16 +48,16 @@ public class WhatsAppController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Receive()
     {
+        _logger.LogInformation("--- WEBHOOK RECIBIDO ---");
         try
         {
             using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
-            _logger.LogInformation("Webhook recibido: {Body}", body);
+            _logger.LogInformation("Cuerpo: {Body}", body);
 
             using var jsonDoc = JsonDocument.Parse(body);
             var root = jsonDoc.RootElement;
 
-            // Navegar por el JSON de Meta para encontrar el mensaje
             if (root.TryGetProperty("entry", out var entryArray) && entryArray.GetArrayLength() > 0)
             {
                 var entry = entryArray[0];
@@ -78,8 +79,6 @@ public class WhatsAppController : ControllerBase
                         }
                         else if (type == "audio")
                         {
-                            // En una versión final, aquí descargaríamos el audio usando el media ID
-                            // Por ahora, usamos la simulación que configuramos en AIService
                             text = "Audio de WhatsApp"; 
                         }
 
@@ -96,8 +95,8 @@ public class WhatsAppController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error procesando mensaje de WhatsApp");
-            return Ok(); // Siempre devolvemos Ok a Meta para evitar que reintente infinitamente
+            _logger.LogError(ex, "Error en el Webhook");
+            return Ok(); 
         }
     }
 }
