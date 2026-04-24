@@ -48,11 +48,13 @@ public class WhatsAppController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Receive()
     {
-        _logger.LogInformation("--- WEBHOOK RECIBIDO ---");
         try
         {
             using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
+            
+            // LOG CRÍTICO: Ver todo lo que Meta envía
+            _logger.LogInformation("--- WEBHOOK RECIBIDO ---");
             _logger.LogInformation("Cuerpo: {Body}", body);
 
             using var jsonDoc = JsonDocument.Parse(body);
@@ -60,42 +62,51 @@ public class WhatsAppController : ControllerBase
 
             if (root.TryGetProperty("entry", out var entryArray) && entryArray.GetArrayLength() > 0)
             {
-                var entry = entryArray[0];
-                if (entry.TryGetProperty("changes", out var changesArray) && changesArray.GetArrayLength() > 0)
+                var value = entryArray[0].GetProperty("changes")[0].GetProperty("value");
+
+                // Verificar si es un MENSAJE o solo un cambio de ESTADO (leído/entregado)
+                if (value.TryGetProperty("messages", out var messagesArray) && messagesArray.GetArrayLength() > 0)
                 {
-                    var change = changesArray[0];
-                    var value = change.GetProperty("value");
+                    var message = messagesArray[0];
+                    string from = message.GetProperty("from").GetString() ?? "Desconocido";
+                    string type = message.GetProperty("type").GetString() ?? "text";
+                    string text = "";
 
-                    if (value.TryGetProperty("messages", out var messagesArray) && messagesArray.GetArrayLength() > 0)
+                    if (type == "text")
                     {
-                        var message = messagesArray[0];
-                        string from = message.GetProperty("from").GetString() ?? "Desconocido";
-                        string type = message.GetProperty("type").GetString() ?? "text";
-                        string text = "";
+                        text = message.GetProperty("text").GetProperty("body").GetString() ?? "";
+                    }
+                    else if (type == "audio")
+                    {
+                        text = "Pedido por audio"; 
+                    }
 
-                        if (type == "text")
+                    _logger.LogInformation("Extrayendo pedido de {From}: {Text}", from, text);
+                    
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        var pedido = await _orderProcessor.ProcessWhatsAppOrderAsync(from, text, type);
+                        if (pedido != null)
                         {
-                            text = message.GetProperty("text").GetProperty("body").GetString() ?? "";
+                            _logger.LogInformation("PEDIDO CREADO EXITOSAMENTE: ID {Id}", pedido.Id);
                         }
-                        else if (type == "audio")
+                        else
                         {
-                            text = "Audio de WhatsApp"; 
-                        }
-
-                        if (!string.IsNullOrEmpty(text))
-                        {
-                            _logger.LogInformation("Procesando pedido de {From}: {Text}", from, text);
-                            await _orderProcessor.ProcessWhatsAppOrderAsync(from, text, type);
+                            _logger.LogWarning("No se pudo crear el pedido (posiblemente no se encontraron artículos)");
                         }
                     }
                 }
+                else if (value.TryGetProperty("statuses", out _))
+                {
+                    _logger.LogInformation("Notificación de estado recibida (Entregado/Leído). Ignorando.");
+                }
             }
 
-            return Ok();
+            return Ok(); // Siempre 200 OK para que Meta no se queje
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error en el Webhook");
+            _logger.LogError(ex, "Error procesando el Webhook");
             return Ok(); 
         }
     }
