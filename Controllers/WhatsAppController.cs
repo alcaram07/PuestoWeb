@@ -48,6 +48,7 @@ public class WhatsAppController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Receive()
     {
+        Console.WriteLine("[DEBUG-CONTROLLER] Recibida llamada POST a Receive()");
         try
         {
             using var reader = new StreamReader(Request.Body);
@@ -56,6 +57,7 @@ public class WhatsAppController : ControllerBase
             // LOG CRÍTICO: Ver todo lo que Meta envía
             _logger.LogInformation("--- WEBHOOK RECIBIDO ---");
             _logger.LogInformation("Cuerpo: {Body}", body);
+            Console.WriteLine($"[DEBUG-BODY] {body}");
 
             using var jsonDoc = JsonDocument.Parse(body);
             var root = jsonDoc.RootElement;

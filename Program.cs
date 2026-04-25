@@ -45,10 +45,21 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// LOG DEFINITIVO: Ver CUALQUIER golpe al servidor
+// LOG DE DIAGNÓSTICO: Ver detalles de peticiones de Meta
 app.Use(async (context, next) =>
 {
-    Console.WriteLine($"[LOG-RED] {context.Request.Method} {context.Request.Path}");
+    if (context.Request.Path.StartsWithSegments("/api/whatsapp"))
+    {
+        Console.WriteLine($"[DEBUG-META] Recibiendo {context.Request.Method} en {context.Request.Path}");
+        foreach (var header in context.Request.Headers)
+        {
+            Console.WriteLine($"[HEADER] {header.Key}: {header.Value}");
+        }
+    }
+    else
+    {
+        Console.WriteLine($"[LOG-RED] {context.Request.Method} {context.Request.Path}");
+    }
     await next();
 });
 
