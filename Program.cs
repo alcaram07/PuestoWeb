@@ -45,20 +45,12 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// LOG DE DIAGNÓSTICO: Ver detalles de peticiones de Meta
+// LOG DE RED: Ver qué llega al servidor
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/api/whatsapp"))
+    if (context.Request.Method == "POST")
     {
-        Console.WriteLine($"[DEBUG-META] Recibiendo {context.Request.Method} en {context.Request.Path}");
-        foreach (var header in context.Request.Headers)
-        {
-            Console.WriteLine($"[HEADER] {header.Key}: {header.Value}");
-        }
-    }
-    else
-    {
-        Console.WriteLine($"[LOG-RED] {context.Request.Method} {context.Request.Path}");
+        Console.WriteLine($"[POST-DETECTADO] Ruta: {context.Request.Path}");
     }
     await next();
 });
