@@ -30,6 +30,19 @@ public class WhatsAppController : ControllerBase
         return Ok("El webhook está vivo y accesible.");
     }
 
+    // NUEVO: Link de Súper-Prueba
+    [HttpGet("super-test")]
+    public async Task<IActionResult> SuperTest()
+    {
+        _logger.LogInformation("Lanzando Súper-Test manual...");
+        var pedido = await _orderProcessor.ProcessWhatsAppOrderAsync("59899097344", "2kg de Manzana Roja", "text");
+        if (pedido != null)
+        {
+            return Ok($"¡ÉXITO! Se ha creado el Pedido ID {pedido.Id} con un total de ${pedido.Total}. Ve a /Admin/Pedidos para verlo.");
+        }
+        return BadRequest("No se pudo crear el pedido. ¿Estás seguro de que tienes un artículo llamado 'Manzana Roja' en el catálogo?");
+    }
+
     [HttpGet]
     public IActionResult Verify()
     {
@@ -48,16 +61,13 @@ public class WhatsAppController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Receive()
     {
-        Console.WriteLine("[DEBUG-CONTROLLER] Recibida llamada POST a Receive()");
         try
         {
             using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
             
-            // LOG CRÍTICO: Ver todo lo que Meta envía
             _logger.LogInformation("--- WEBHOOK RECIBIDO ---");
             _logger.LogInformation("Cuerpo: {Body}", body);
-            Console.WriteLine($"[DEBUG-BODY] {body}");
 
             using var jsonDoc = JsonDocument.Parse(body);
             var root = jsonDoc.RootElement;
@@ -66,7 +76,6 @@ public class WhatsAppController : ControllerBase
             {
                 var value = entryArray[0].GetProperty("changes")[0].GetProperty("value");
 
-                // Verificar si es un MENSAJE o solo un cambio de ESTADO (leído/entregado)
                 if (value.TryGetProperty("messages", out var messagesArray) && messagesArray.GetArrayLength() > 0)
                 {
                     var message = messagesArray[0];
@@ -83,7 +92,7 @@ public class WhatsAppController : ControllerBase
                         text = "Pedido por audio"; 
                     }
 
-                    _logger.LogInformation("Extrayendo pedido de {From}: {Text}", from, text);
+                    _logger.LogInformation("Procesando pedido de {From}: {Text}", from, text);
                     
                     if (!string.IsNullOrEmpty(text))
                     {
@@ -92,19 +101,11 @@ public class WhatsAppController : ControllerBase
                         {
                             _logger.LogInformation("PEDIDO CREADO EXITOSAMENTE: ID {Id}", pedido.Id);
                         }
-                        else
-                        {
-                            _logger.LogWarning("No se pudo crear el pedido (posiblemente no se encontraron artículos)");
-                        }
                     }
-                }
-                else if (value.TryGetProperty("statuses", out _))
-                {
-                    _logger.LogInformation("Notificación de estado recibida (Entregado/Leído). Ignorando.");
                 }
             }
 
-            return Ok(); // Siempre 200 OK para que Meta no se queje
+            return Ok();
         }
         catch (Exception ex)
         {

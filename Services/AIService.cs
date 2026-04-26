@@ -18,13 +18,13 @@ public class AIService
     public async Task<string> TranscribeAudioAsync(Stream audioStream, string fileName)
     {
         await Task.CompletedTask;
-        return "Simulación: El audio dice 'Quiero 2 kilos de papas y una sandía'.";
+        return "Pedido por audio detectado";
     }
 
     public async Task<string> AnalyzeImageAsync(string imageUrl)
     {
         await Task.CompletedTask;
-        return "Simulación: Imagen de lista de compras detectada.";
+        return "Pedido por imagen detectado";
     }
 
     public async Task<List<InterpretedItem>> InterpretOrderAsync(string text)
@@ -37,40 +37,48 @@ public class AIService
         var items = new List<InterpretedItem>();
         if (string.IsNullOrEmpty(text)) return items;
 
-        var words = text.ToLower().Split(new char[] { ' ', ',', '.', '\n', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+        // Limpiar el texto y buscar patrones de cantidad (números)
+        var cleanedText = text.ToLower();
         
-        for (int i = 0; i < words.Length; i++)
+        // Regex para encontrar números seguidos opcionalmente de kg/kilo y luego palabras
+        // Ej: "2kg de papas", "1 kilo de manzanas", "3 bananas"
+        var matches = Regex.Matches(cleanedText, @"(\d+(?:[\.,]\d+)?)\s*(?:kg|kilo|kilos|unidades|uds)?\s*(?:de)?\s*([a-záéíóúñ\s]+?)(?=\s+\d|\s*$|,) ");
+
+        foreach (Match match in matches)
         {
-            if (double.TryParse(words[i], out double qty))
+            if (double.TryParse(match.Groups[1].Value.Replace(",", "."), out double qty))
             {
-                if (i + 1 < words.Length)
-                {
-                    var product = words[i + 1];
-                    if ((product == "kg" || product == "kilo" || product == "kilos" || product == "de") && i + 2 < words.Length)
-                    {
-                        product = words[i + 2];
-                        if (product == "de" && i + 3 < words.Length) product = words[i + 3];
-                    }
-                    
-                    items.Add(new InterpretedItem { ArticuloSugerido = product, Cantidad = qty });
-                    i++; 
-                }
-            }
-            else if (words[i] == "un" || words[i] == "una")
-            {
-                 if (i + 1 < words.Length)
-                 {
-                    var product = words[i + 1];
-                    if (product == "kilo" || product == "kg" && i + 2 < words.Length) product = words[i+2];
-                    items.Add(new InterpretedItem { ArticuloSugerido = product, Cantidad = 1 });
-                    i++;
-                 }
+                items.Add(new InterpretedItem 
+                { 
+                    ArticuloSugerido = match.Groups[2].Value.Trim(), 
+                    Cantidad = qty 
+                });
             }
         }
 
-        if (items.Count == 0 && words.Length > 0)
+        // Si no encontró nada con números, buscamos palabras clave que coincidan con productos comunes
+        if (items.Count == 0)
         {
-            items.Add(new InterpretedItem { ArticuloSugerido = words[0], Cantidad = 1 });
+            // Fallback: si menciona un producto pero sin cantidad, asumimos 1
+            var commonProducts = new[] { "manzana", "banana", "papa", "tomate", "lechuga", "naranja" };
+            foreach (var prod in commonProducts)
+            {
+                if (cleanedText.Contains(prod))
+                {
+                    items.Add(new InterpretedItem { ArticuloSugerido = prod, Cantidad = 1 });
+                }
+            }
+        }
+
+        // Si sigue vacío, al menos devolvemos la primera palabra larga para intentar buscar algo
+        if (items.Count == 0)
+        {
+            var words = cleanedText.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                                   .Where(w => w.Length > 3).ToList();
+            if (words.Any())
+            {
+                items.Add(new InterpretedItem { ArticuloSugerido = words[0], Cantidad = 1 });
+            }
         }
 
         return items;
